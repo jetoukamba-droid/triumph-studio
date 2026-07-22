@@ -1715,7 +1715,7 @@ void TrackRowComponent::seekFromMouseX (float x)
 
 juce::Rectangle<int> TrackRowComponent::getTimelineArea() const
 {
-    return getLocalBounds().withTrimmedLeft (controlWidth + timelineInset)
+    return getLocalBounds().withTrimmedLeft (controlWidth + eventDisplayInset)
         .reduced (0, 8);
 }
 

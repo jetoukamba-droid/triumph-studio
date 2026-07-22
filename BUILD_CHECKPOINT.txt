@@ -80,6 +80,10 @@ Manual acceptance:
   recording/recovery, FR-3 plug-in isolation, and FR-4 mixer/monitoring marked
   partial until the named hardware, forced-failure, third-party compatibility,
   and offline parity evidence is available.
+- Create a new instrument track and confirm the event display is empty until
+  recording or explicit MIDI note entry creates the first MIDI part. Confirm
+  the ruler is a straight time scale aligned to the event display origin, with
+  no visible TIMELINE panel label.
 
 Honest release boundary:
 

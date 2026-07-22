@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 
 #include "audio/AudioEngine.h"
+#include "core/ArrangementLayout.h"
 #include "model/ProjectModel.h"
 
 #include <functional>
@@ -18,9 +19,9 @@ public:
     using TrackDeleteRequestCallback = std::function<void (const juce::String&)>;
     using TrackHeightChangeCallback = std::function<void (const juce::String&, int)>;
 
-    static constexpr int controlWidth = 166;
-    static constexpr int preferredHeight = 64;
-    static constexpr int timelineInset = 8;
+    static constexpr int controlWidth = arrangement::trackHeaderWidth;
+    static constexpr int preferredHeight = arrangement::preferredTrackHeight;
+    static constexpr int eventDisplayInset = arrangement::eventDisplayInset;
 
     TrackRowComponent (ProjectModel& projectModel,
                        AudioEngine& sharedEngine,

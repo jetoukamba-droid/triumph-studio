@@ -241,6 +241,10 @@ if (BUILD_TESTING)
     target_include_directories(FoundationsExitGatesTests PRIVATE src tests)
     add_test(NAME FoundationsExitGatesTests COMMAND FoundationsExitGatesTests)
 
+    add_executable(ArrangementLayoutTests tests/ArrangementLayoutTests.cpp)
+    target_include_directories(ArrangementLayoutTests PRIVATE src tests)
+    add_test(NAME ArrangementLayoutTests COMMAND ArrangementLayoutTests)
+
     add_executable(TimelineMathTests tests/TimelineMathTests.cpp)
     target_include_directories(TimelineMathTests PRIVATE src)
     add_test(NAME TimelineMathTests COMMAND TimelineMathTests)

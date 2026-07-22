@@ -517,8 +517,7 @@ int main()
     REQUIRE (instrumentTrack.isNotEmpty());
     const auto instrument = midiProject.getTrackState (instrumentTrack);
     REQUIRE (instrument.isInstrument);
-    REQUIRE (instrument.midiClips.size() == 1);
-    const auto midiClipId = instrument.midiClips.front().id;
+    REQUIRE (instrument.midiClips.empty());
     midiProject.setTrackRecordArmed (instrumentTrack, true);
     REQUIRE (midiProject.getArmedTrackId() == instrumentTrack);
     std::vector<MidiNoteState> capturedNotes {
@@ -526,25 +525,29 @@ int main()
         { {}, 18.0, 1.0, 67, 0.81f, 2 }
     };
     REQUIRE (midiProject.addMidiNotes (instrumentTrack,
-                                       midiClipId,
+                                       {},
                                        capturedNotes) == 2);
     auto recordedMidi = midiProject.getTrackState (instrumentTrack);
     REQUIRE (! recordedMidi.recordArmed);
+    REQUIRE (recordedMidi.midiClips.size() == 1);
     REQUIRE (recordedMidi.midiClips.front().notes.size() == 2);
     REQUIRE (recordedMidi.midiClips.front().lengthBeats >= 19.0);
     REQUIRE (recordedMidi.midiClips.front().notes.front().channel == 2);
     REQUIRE (midiProject.undo());
     recordedMidi = midiProject.getTrackState (instrumentTrack);
     REQUIRE (recordedMidi.recordArmed);
-    REQUIRE (recordedMidi.midiClips.front().notes.empty());
+    REQUIRE (recordedMidi.midiClips.empty());
     midiProject.setTrackRecordArmed (instrumentTrack, false);
     const auto midiNoteId = midiProject.addMidiNote (instrumentTrack,
-                                                     midiClipId,
+                                                     {},
                                                      1.13,
                                                      0.5,
                                                      60,
                                                      0.75f);
     REQUIRE (midiNoteId.isNotEmpty());
+    recordedMidi = midiProject.getTrackState (instrumentTrack);
+    REQUIRE (recordedMidi.midiClips.size() == 1);
+    const auto midiClipId = recordedMidi.midiClips.front().id;
     REQUIRE (midiProject.quantizeMidiClip (instrumentTrack, midiClipId, 0.25));
     REQUIRE (std::abs (midiProject.getTrackState (instrumentTrack)
                            .midiClips.front().notes.front().startBeat - 1.25) < 0.0001);
@@ -1273,10 +1276,13 @@ int main()
 
     const auto graphTrack = professionalGraphProject.getTrackState (
         graphTrackId);
-    REQUIRE (! graphTrack.midiClips.empty());
-    const auto graphClipId = graphTrack.midiClips.front().id;
+    REQUIRE (graphTrack.midiClips.empty());
     const auto expressiveNoteId = professionalGraphProject.addMidiNote (
-        graphTrackId, graphClipId, 1.0, 2.0, 64, 0.8f);
+        graphTrackId, {}, 1.0, 2.0, 64, 0.8f);
+    const auto graphTrackWithClip = professionalGraphProject.getTrackState (
+        graphTrackId);
+    REQUIRE (graphTrackWithClip.midiClips.size() == 1);
+    const auto graphClipId = graphTrackWithClip.midiClips.front().id;
     REQUIRE (professionalGraphProject.setMidiNoteExpression (
         graphTrackId, graphClipId, expressiveNoteId,
         { { "pitch", 0.25, 0.5f,

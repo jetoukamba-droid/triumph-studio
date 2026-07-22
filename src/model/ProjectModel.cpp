@@ -2034,12 +2034,6 @@ juce::String ProjectModel::addInstrumentTrack (juce::String name)
     trackNode.setProperty (modelIds::frozen, false, nullptr);
     trackNode.setProperty (modelIds::freezeSourceId, {}, nullptr);
 
-    juce::ValueTree clipNode (modelIds::midiClip);
-    clipNode.setProperty (modelIds::id, juce::Uuid().toString(), nullptr);
-    clipNode.setProperty (modelIds::startBeat, 0.0, nullptr);
-    clipNode.setProperty (modelIds::lengthBeats, 16.0, nullptr);
-    trackNode.addChild (clipNode, -1, nullptr);
-
     beginUndoTransaction ("Create Instrument Track");
     state.addChild (trackNode, -1, &undoManager);
     return trackId;
@@ -2126,9 +2120,32 @@ juce::String ProjectModel::addMidiNote (const juce::String& trackId,
                                         int noteNumber,
                                         float velocity)
 {
+    auto track = findTrack (trackId);
     auto clip = findMidiClip (trackId, clipId);
     if (! clip.isValid())
-        return {};
+    {
+        if (! track.isValid()
+            || ! static_cast<bool> (track.getProperty (modelIds::isInstrument, false))
+            || clipId.isNotEmpty())
+            return {};
+
+        juce::ValueTree clipNode (modelIds::midiClip);
+        clipNode.setProperty (modelIds::id, juce::Uuid().toString(), nullptr);
+        clipNode.setProperty (modelIds::startBeat, 0.0, nullptr);
+        clipNode.setProperty (
+            modelIds::lengthBeats,
+            juce::jmax (16.0, startBeat + juce::jmax (1.0 / 64.0, lengthBeats)),
+            nullptr);
+
+        beginUndoTransaction ("Add MIDI Note");
+        track.addChild (clipNode, -1, &undoManager);
+        clip = clipNode;
+    }
+    else
+    {
+        beginUndoTransaction ("Add MIDI Note");
+    }
+
     const auto noteId = juce::Uuid().toString();
     juce::ValueTree note (modelIds::midiNote);
     note.setProperty (modelIds::id, noteId, nullptr);
@@ -2138,7 +2155,6 @@ juce::String ProjectModel::addMidiNote (const juce::String& trackId,
     note.setProperty (modelIds::velocity, juce::jlimit (0.01f, 1.0f, velocity), nullptr);
     note.setProperty (modelIds::channel, 1, nullptr);
     note.setProperty (modelIds::noteId, static_cast<juce::int64> (0), nullptr);
-    beginUndoTransaction ("Add MIDI Note");
     clip.addChild (note, -1, &undoManager);
     return noteId;
 }
@@ -2149,11 +2165,35 @@ int ProjectModel::addMidiNotes (const juce::String& trackId,
 {
     auto track = findTrack (trackId);
     auto clip = findMidiClip (trackId, clipId);
-    if (! track.isValid() || ! clip.isValid() || notes.empty())
+    if (! track.isValid() || notes.empty())
+        return 0;
+
+    if (! clip.isValid()
+        && (! static_cast<bool> (track.getProperty (modelIds::isInstrument, false))
+            || clipId.isNotEmpty()))
         return 0;
 
     beginUndoTransaction ("Record MIDI Take");
     suppressNotifications = true;
+
+    if (! clip.isValid())
+    {
+        double requiredLengthBeats = 16.0;
+        for (const auto& source : notes)
+            requiredLengthBeats = juce::jmax (
+                requiredLengthBeats,
+                juce::jmax (0.0, source.startBeat)
+                    + juce::jmax (1.0 / 64.0, source.lengthBeats));
+
+        juce::ValueTree clipNode (modelIds::midiClip);
+        clipNode.setProperty (modelIds::id, juce::Uuid().toString(), nullptr);
+        clipNode.setProperty (modelIds::startBeat, 0.0, nullptr);
+        clipNode.setProperty (modelIds::lengthBeats, requiredLengthBeats,
+                              nullptr);
+        track.addChild (clipNode, -1, &undoManager);
+        clip = clipNode;
+    }
+
     int added = 0;
     auto requiredLengthBeats = static_cast<double> (
         clip.getProperty (modelIds::lengthBeats, 16.0));

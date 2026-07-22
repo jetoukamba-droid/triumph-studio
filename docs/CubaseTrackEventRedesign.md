@@ -12,6 +12,17 @@ the permanent destructive control from every track header.
   and Delete Track.
 - Delete Track still uses the application-level confirmation dialog and Undo.
 - The former red `x` track button is removed.
+- Creating an audio or instrument track creates only the track header/lane.
+  The event display stays empty until import, recording, or explicit MIDI note
+  entry creates an audio event or MIDI part.
+
+## Ruler and event display
+
+- The ruler is a straight time scale aligned to the event display origin.
+- The ruler is not painted as a titled panel and does not show a permanent
+  `TIMELINE` label.
+- Track height dragging remains a row operation: dragging the row bottom edge
+  down enlarges the lane, and dragging up reduces it within the bounded range.
 
 ## Audio events and MIDI parts
 

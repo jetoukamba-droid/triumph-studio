@@ -2637,7 +2637,9 @@ void MainComponent::createInstrumentTrack()
     if (trackId.isNotEmpty())
     {
         project.setTrackRecordArmed (trackId, true);
-        showPianoRoll (trackId);
+        audioStatusLabel.setText (
+            "Instrument track armed - record to create a MIDI part",
+            juce::dontSendNotification);
     }
 }
 
@@ -2694,7 +2696,11 @@ void MainComponent::showPianoRoll (const juce::String& requestedTrackId)
 
     const auto track = project.getTrackState (trackId);
     if (track.midiClips.empty())
+    {
+        showInformation ("No MIDI part yet",
+                         "Record MIDI on this instrument track first, or add a note to create the first MIDI part.");
         return;
+    }
 
     const auto safe = juce::Component::SafePointer<MainComponent> (this);
     auto editor = std::make_unique<PianoRollComponent> (
@@ -4431,7 +4437,7 @@ void MainComponent::offerRecordingRecovery()
 void MainComponent::startMidiRecording (const juce::String& trackId)
 {
     const auto track = project.getTrackState (trackId);
-    if (! track.isInstrument || track.midiClips.empty())
+    if (! track.isInstrument)
     {
         showError ("No record-ready instrument",
                    "Arm a MIDI instrument track, then try recording again.");
@@ -4461,7 +4467,7 @@ void MainComponent::stopMidiRecording()
     recordingTrackId.clear();
 
     const auto track = project.getTrackState (targetTrackId);
-    if (! track.isInstrument || track.midiClips.empty())
+    if (! track.isInstrument)
     {
         showError ("MIDI take could not be added",
                    "The destination instrument track is no longer available.");
@@ -4474,7 +4480,10 @@ void MainComponent::stopMidiRecording()
             point.curve == TempoCurve::linear ? tempo::SegmentCurve::linear
                                                : tempo::SegmentCurve::step });
 
-    const auto& clip = track.midiClips.front();
+    const auto clipId = track.midiClips.empty() ? juce::String()
+                                                : track.midiClips.front().id;
+    const auto clipStartBeat = track.midiClips.empty()
+        ? 0.0 : track.midiClips.front().startBeat;
     std::vector<MidiNoteState> notes;
     notes.reserve (captured.size());
     for (const auto& source : captured)
@@ -4485,7 +4494,7 @@ void MainComponent::stopMidiRecording()
         const auto absoluteStartBeat = tempo::secondsToBeat (startSeconds, tempoPoints);
         const auto absoluteEndBeat = tempo::secondsToBeat (endSeconds, tempoPoints);
         notes.push_back ({ {},
-                           juce::jmax (0.0, absoluteStartBeat - clip.startBeat),
+                           juce::jmax (0.0, absoluteStartBeat - clipStartBeat),
                            juce::jmax (1.0 / 64.0,
                                        absoluteEndBeat - absoluteStartBeat),
                            source.noteNumber,
@@ -4493,7 +4502,7 @@ void MainComponent::stopMidiRecording()
                            source.channel });
     }
 
-    const auto added = project.addMidiNotes (targetTrackId, clip.id, notes);
+    const auto added = project.addMidiNotes (targetTrackId, clipId, notes);
     if (added == 0)
         project.setTrackRecordArmed (targetTrackId, false);
     audioStatusLabel.setText (added > 0

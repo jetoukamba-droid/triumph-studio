@@ -111,6 +111,11 @@ real-world testing.
   exit-gate matrix. Realtime streaming, recording/recovery, plug-in isolation,
   and mixer/monitoring now stay explicitly partial until their hardware,
   forced-failure, compatibility, and offline parity evidence is present.
+- Post-Beta FR-22 checkpoint: makes the arrangement timeline follow a pro DAW
+  ruler/event-display contract. The ruler no longer paints as a labelled
+  timeline panel, track-row event areas and ruler ticks share one x-origin, and
+  new instrument tracks stay empty until recording or MIDI note entry creates
+  the first MIDI part.
 
 ## Automated gate
 

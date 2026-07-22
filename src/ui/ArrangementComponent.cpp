@@ -1,5 +1,6 @@
 #include "ArrangementComponent.h"
 
+#include "core/ArrangementLayout.h"
 #include "core/TimelineMath.h"
 #include "StudioLookAndFeel.h"
 
@@ -10,12 +11,9 @@ namespace triumph
 {
 namespace
 {
-constexpr int rowContentInsetX = 8;
-
 int timelineLeftOffset() noexcept
 {
-    return rowContentInsetX + TrackRowComponent::controlWidth
-           + TrackRowComponent::timelineInset;
+    return arrangement::rulerOriginX();
 }
 }
 
@@ -284,7 +282,8 @@ void ArrangementComponent::updateContentBounds()
                                  timelineLeftOffset() + 8 + timelineWidth),
                      contentHeight);
 
-    auto rowBounds = content.getLocalBounds().reduced (8, 6);
+    auto rowBounds = content.getLocalBounds().reduced (
+        arrangement::rowContentInsetX, 6);
 
     for (auto* row : rows)
     {
@@ -304,8 +303,7 @@ int ArrangementComponent::heightForTrack (const juce::String& trackId) const
 void ArrangementComponent::setHeightForTrack (const juce::String& trackId,
                                               int newHeight)
 {
-    const auto clampedHeight = juce::jlimit (
-        TrackRowComponent::preferredHeight, 220, newHeight);
+    const auto clampedHeight = arrangement::clampTrackHeight (newHeight);
     for (auto& entry : trackHeights)
         if (entry.first == trackId)
         {
@@ -378,18 +376,16 @@ void ArrangementComponent::paintTimelineRuler (juce::Graphics& graphics)
                                  static_cast<float> (area.getX()),
                                  static_cast<float> (area.getRight()));
 
-    auto leftHeader = area.withWidth (timelineLeftOffset());
-    graphics.setColour (StudioColours::panel);
+    const auto leftHeader = area.withWidth (timelineLeftOffset());
+    graphics.setColour (StudioColours::background);
     graphics.fillRect (leftHeader);
-    graphics.setColour (StudioColours::primary.withAlpha (0.85f));
-    graphics.fillRect (leftHeader.withHeight (2));
-    graphics.setColour (StudioColours::textMuted);
-    graphics.setFont (juce::FontOptions (11.0f).withStyle ("Bold"));
-    graphics.drawText ("TIMELINE", leftHeader.reduced (13, 4),
-                       juce::Justification::centredLeft, false);
+    graphics.setColour (StudioColours::border.withAlpha (0.40f));
+    graphics.drawVerticalLine (leftHeader.getRight() - 1,
+                               static_cast<float> (leftHeader.getY()),
+                               static_cast<float> (leftHeader.getBottom()));
 
     const auto ruler = area.withTrimmedLeft (timelineLeftOffset());
-    graphics.setColour (StudioColours::panelRaised);
+    graphics.setColour (StudioColours::background);
     graphics.fillRect (ruler);
     graphics.setColour (StudioColours::border.withAlpha (0.50f));
     graphics.drawVerticalLine (ruler.getX(), static_cast<float> (ruler.getY()),
