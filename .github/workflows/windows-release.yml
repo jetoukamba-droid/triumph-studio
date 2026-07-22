@@ -1,4 +1,4 @@
-﻿name: Windows Release Gate
+name: Windows Release Gate
 
 on:
   push:
@@ -62,7 +62,8 @@ jobs:
         with:
           name: triumph-studio-windows-release
           path: |
-            build/TriumphStudio_artifacts/Release/**
+            build/TriumphStudio_artifacts/**
+            build/TriumphPluginScanner_artifacts/**
             build/packages/**
             build/hashes/**
           if-no-files-found: error
