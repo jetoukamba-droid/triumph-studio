@@ -213,6 +213,12 @@ attributed through realtime telemetry. FR-3 remains open on host-native VST3
 parameter queue/ramp parity, broad third-party compatibility, expanded bus
 coverage, and cross-process live runtime isolation.
 
+Implementation checkpoint: FR-19 names and tests the current delivery contract
+as `sample-offset sub-block slicing`, uses the same helper in the audio engine
+and deterministic automation tests, and exposes the delivery mode in `More >
+Copy Realtime Diagnostics`. Native VST3 parameter queues/ramps remain a later
+compatibility gate.
+
 ### FR-7 - Reliability and product architecture
 
 Backlog: 19 partial-or-missing findings from research ranges 1-15 and 136-150.

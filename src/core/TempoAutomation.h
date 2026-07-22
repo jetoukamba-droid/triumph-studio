@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -23,6 +24,22 @@ enum class Curve
     linear,
     smooth
 };
+
+enum class PluginParameterDelivery
+{
+    sampleOffsetSubBlocks
+};
+
+inline const char* pluginParameterDeliveryName (
+    PluginParameterDelivery delivery) noexcept
+{
+    switch (delivery)
+    {
+        case PluginParameterDelivery::sampleOffsetSubBlocks:
+            return "sample-offset sub-block slicing";
+    }
+    return "sample-offset sub-block slicing";
+}
 
 struct Point
 {
@@ -108,6 +125,36 @@ inline bool visitParameterEventsForBlock (std::int64_t blockStartSample,
             point.sample - blockStartSample);
         if (! visitor (offset, std::clamp (point.value, 0.0f, 1.0f)))
             return false;
+    }
+    return true;
+}
+
+template <typename OffsetProvider, typename Visitor>
+inline bool visitParameterAutomationSlices (int blockSize,
+                                            std::size_t eventCount,
+                                            OffsetProvider&& offsetAt,
+                                            Visitor&& visitor)
+{
+    if (blockSize <= 0)
+        return true;
+
+    auto cursor = 0;
+    auto nextEvent = static_cast<std::size_t> (0);
+    while (cursor < blockSize)
+    {
+        while (nextEvent < eventCount
+               && static_cast<int> (offsetAt (nextEvent)) <= cursor)
+            ++nextEvent;
+
+        auto nextOffset = blockSize;
+        if (nextEvent < eventCount)
+            nextOffset = std::clamp (static_cast<int> (offsetAt (nextEvent)),
+                                     0, blockSize);
+        nextOffset = std::clamp (nextOffset, cursor + 1, blockSize);
+
+        if (! visitor (cursor, nextOffset - cursor))
+            return false;
+        cursor = nextOffset;
     }
     return true;
 }

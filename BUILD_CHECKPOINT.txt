@@ -69,6 +69,9 @@ Manual acceptance:
   changes land smoothly inside the block instead of stepping only once per
   callback; realtime diagnostics should report parameter queue pressure if the
   bounded event list is exceeded.
+- Open More > Copy Realtime Diagnostics after a plug-in automation pass and
+  confirm the plug-in runtime section reports `Automation delivery:
+  sample-offset sub-block slicing`.
 
 Honest release boundary:
 

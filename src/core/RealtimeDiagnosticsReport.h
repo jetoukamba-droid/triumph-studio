@@ -24,6 +24,7 @@ struct DiagnosticsReportInput
     std::uint64_t pluginDeadlineMisses = 0;
     std::uint64_t containedPluginExceptions = 0;
     std::uint64_t instrumentContainedPluginExceptions = 0;
+    std::string pluginAutomationDeliveryMode;
     std::uint64_t audioDeviceInterruptions = 0;
     std::uint64_t audioDeviceRecoveryAttempts = 0;
     std::uint64_t audioDeviceRecoveries = 0;
@@ -125,6 +126,10 @@ inline std::string buildDiagnosticsReport (
            << input.containedPluginExceptions << '\n'
            << "  Instrument contained exceptions: "
            << input.instrumentContainedPluginExceptions
+           << "\n  Automation delivery: "
+           << (input.pluginAutomationDeliveryMode.empty()
+                   ? "sample-offset sub-block slicing"
+                   : input.pluginAutomationDeliveryMode)
            << "\n\nAudio device recovery\n"
            << "  Device restarts: " << realtime.deviceRestartCount << '\n'
            << "  Variable block/rate changes: "

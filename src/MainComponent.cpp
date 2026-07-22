@@ -5743,6 +5743,9 @@ juce::String MainComponent::buildRealtimeDiagnosticsReportText()
     input.containedPluginExceptions = pluginRuntime.containedExceptions;
     input.instrumentContainedPluginExceptions =
         pluginRuntime.instrumentContainedExceptions;
+    input.pluginAutomationDeliveryMode =
+        automation::pluginParameterDeliveryName (
+            automation::PluginParameterDelivery::sampleOffsetSubBlocks);
 
     const auto recoveryStatus = audioOutputRecovery.snapshot();
     input.audioDeviceInterruptions = recoveryStatus.interruptions;

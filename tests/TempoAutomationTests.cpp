@@ -3,6 +3,7 @@
 #include "core/TempoAutomation.h"
 
 #include <cmath>
+#include <string>
 #include <vector>
 
 int main()
@@ -71,6 +72,36 @@ int main()
     }));
     REQUIRE (parameterEvents.size() == 2);
     REQUIRE (parameterEvents.front().sampleOffset == 8);
+
+    REQUIRE (std::string (
+                 automation::pluginParameterDeliveryName (
+                     automation::PluginParameterDelivery::sampleOffsetSubBlocks))
+             == "sample-offset sub-block slicing");
+
+    struct CapturedSlice
+    {
+        int start = 0;
+        int count = 0;
+    };
+    const std::vector<std::uint32_t> offsets { 0, 8, 8, 32, 63 };
+    std::vector<CapturedSlice> slices;
+    REQUIRE (automation::visitParameterAutomationSlices (
+        64, offsets.size(),
+        [&] (std::size_t index) { return offsets[index]; },
+        [&] (int start, int count)
+    {
+        slices.push_back ({ start, count });
+        return true;
+    }));
+    REQUIRE (slices.size() == 4);
+    REQUIRE (slices[0].start == 0);
+    REQUIRE (slices[0].count == 8);
+    REQUIRE (slices[1].start == 8);
+    REQUIRE (slices[1].count == 24);
+    REQUIRE (slices[2].start == 32);
+    REQUIRE (slices[2].count == 31);
+    REQUIRE (slices[3].start == 63);
+    REQUIRE (slices[3].count == 1);
 
     const std::vector<automation::Signature> signatures {
         { 0.0, 4, 4 }, { 8.0, 3, 4 }

@@ -108,6 +108,9 @@ int main()
              != std::string::npos);
     REQUIRE (report.find ("Contained exceptions: 1")
              != std::string::npos);
+    REQUIRE (report.find (
+                 "Automation delivery: sample-offset sub-block slicing")
+             != std::string::npos);
     REQUIRE (report.find ("Verdict: Action required")
              != std::string::npos);
 

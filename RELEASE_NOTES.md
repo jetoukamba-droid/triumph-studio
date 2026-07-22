@@ -100,6 +100,9 @@ real-world testing.
   bounded automation events by processing sub-blocks at the exact changed
   sample, with MIDI events re-based for each sub-block and queue overflow
   counted by realtime telemetry.
+- Post-Beta FR-19 checkpoint: names the current plug-in automation delivery
+  mode as sample-offset sub-block slicing, uses the same tested helper in the
+  audio engine, and includes the delivery mode in copied realtime diagnostics.
 
 ## Automated gate
 

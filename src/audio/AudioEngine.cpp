@@ -1936,27 +1936,26 @@ void AudioEngine::processPluginBlockWithAutomation (
     const auto eventCount = collectPluginParameterEvents (
         automation, blockStartSample, numSamples, events);
     auto nextEvent = static_cast<std::size_t> (0);
-    auto cursor = 0;
 
-    while (cursor < numSamples)
+    triumph::automation::visitParameterAutomationSlices (
+        numSamples, eventCount,
+        [&] (std::size_t index) noexcept
+    {
+        return events[index].sampleOffset;
+    },
+        [&] (int cursor, int count)
     {
         applyPluginParameterEvents (
             automation, events, eventCount, nextEvent,
             static_cast<std::uint32_t> (cursor));
-
-        auto nextOffset = numSamples;
-        if (nextEvent < eventCount)
-            nextOffset = static_cast<int> (events[nextEvent].sampleOffset);
-        nextOffset = juce::jlimit (cursor + 1, numSamples, nextOffset);
-        const auto count = nextOffset - cursor;
 
         juce::AudioBuffer<float> processView (
             audio.getArrayOfWritePointers(), audio.getNumChannels(),
             cursor, count);
         copyMidiRange (midi, processMidi, cursor, count);
         plugin.processBlock (processView, processMidi);
-        cursor = nextOffset;
-    }
+        return true;
+    });
 }
 
 void AudioEngine::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
