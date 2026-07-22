@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(TriumphStudio VERSION 0.22.0 LANGUAGES CXX)
+project(TriumphStudio VERSION 0.22.0 LANGUAGES C CXX)
 
 set(TRIUMPH_RELEASE_LABEL "0.22.0-beta.1")
 set(TRIUMPH_RELEASE_CHANNEL "Closed Beta 1")
