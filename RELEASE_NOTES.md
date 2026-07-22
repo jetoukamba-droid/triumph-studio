@@ -103,6 +103,10 @@ real-world testing.
 - Post-Beta FR-19 checkpoint: names the current plug-in automation delivery
   mode as sample-offset sub-block slicing, uses the same tested helper in the
   audio engine, and includes the delivery mode in copied realtime diagnostics.
+- Post-Beta FR-20 checkpoint: adds deterministic native VST3 parameter
+  queue/ramp planning evidence. Automation points are translated into stable
+  sample offsets, clamped values, and ramp metadata so the later live VST3
+  parameter-queue integration has a tested compatibility contract.
 
 ## Automated gate
 

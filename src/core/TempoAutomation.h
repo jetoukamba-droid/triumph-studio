@@ -27,7 +27,8 @@ enum class Curve
 
 enum class PluginParameterDelivery
 {
-    sampleOffsetSubBlocks
+    sampleOffsetSubBlocks,
+    nativeVst3ParameterQueueRamp
 };
 
 inline const char* pluginParameterDeliveryName (
@@ -37,6 +38,8 @@ inline const char* pluginParameterDeliveryName (
     {
         case PluginParameterDelivery::sampleOffsetSubBlocks:
             return "sample-offset sub-block slicing";
+        case PluginParameterDelivery::nativeVst3ParameterQueueRamp:
+            return "native VST3 parameter queue/ramp plan";
     }
     return "sample-offset sub-block slicing";
 }
@@ -94,6 +97,118 @@ inline float valueAtSample (std::int64_t sample,
     if (left.curve == Curve::smooth)
         amount = amount * amount * (3.0f - 2.0f * amount);
     return left.value + (right.value - left.value) * amount;
+}
+
+inline Curve curveAtSample (std::int64_t sample,
+                            const std::vector<Point>& points) noexcept
+{
+    if (points.empty() || sample < points.front().sample)
+        return Curve::hold;
+
+    const auto upper = std::upper_bound (
+        points.begin(), points.end(), sample, [] (std::int64_t position,
+                                                  const auto& point)
+    {
+        return position < point.sample;
+    });
+    if (upper == points.begin())
+        return points.front().curve;
+    return (upper - 1)->curve;
+}
+
+struct NativeParameterQueuePoint
+{
+    std::uint32_t sampleOffset = 0;
+    float value = 0.0f;
+    Curve curveToNext = Curve::hold;
+};
+
+inline bool isRampCurve (Curve curve) noexcept
+{
+    return curve == Curve::linear || curve == Curve::smooth;
+}
+
+inline std::vector<NativeParameterQueuePoint> nativeParameterQueueForBlock (
+    std::int64_t blockStartSample, int blockSize,
+    const std::vector<Point>& points, float currentValue,
+    float lastDeliveredValue)
+{
+    std::vector<NativeParameterQueuePoint> queue;
+    if (blockSize <= 0 || points.empty())
+        return queue;
+
+    const auto blockEndSample = blockStartSample
+        + static_cast<std::int64_t> (blockSize);
+    const auto clampedValueAt = [&] (std::int64_t sample)
+    {
+        return std::clamp (valueAtSample (sample, points, currentValue),
+                           0.0f, 1.0f);
+    };
+    const auto append = [&] (std::uint32_t offset, float value, Curve curve)
+    {
+        value = std::clamp (value, 0.0f, 1.0f);
+        if (! queue.empty() && queue.back().sampleOffset == offset)
+        {
+            queue.back().value = value;
+            queue.back().curveToNext = curve;
+            return;
+        }
+        queue.push_back ({ offset, value, curve });
+    };
+
+    const auto startValue = clampedValueAt (blockStartSample);
+    if (lastDeliveredValue < 0.0f
+        || std::abs (startValue - lastDeliveredValue) > 0.000001f)
+        append (0, startValue, curveAtSample (blockStartSample, points));
+
+    for (const auto& point : points)
+    {
+        if (point.sample <= blockStartSample || point.sample >= blockEndSample)
+            continue;
+        append (static_cast<std::uint32_t> (point.sample - blockStartSample),
+                point.value, point.curve);
+    }
+
+    if (! queue.empty() && queue.front().sampleOffset > 0)
+    {
+        const auto firstSample = blockStartSample
+            + static_cast<std::int64_t> (queue.front().sampleOffset);
+        const auto startCurve = curveAtSample (blockStartSample, points);
+        if (isRampCurve (startCurve)
+            && std::abs (startValue - clampedValueAt (firstSample))
+                   > 0.000001f)
+            queue.insert (queue.begin(), { 0, startValue, startCurve });
+    }
+
+    const auto finalSample = blockEndSample - 1;
+    const auto finalValue = clampedValueAt (finalSample);
+    const auto finalCurve = curveAtSample (finalSample, points);
+    if (queue.empty() && isRampCurve (curveAtSample (blockStartSample, points))
+        && std::abs (startValue - finalValue) > 0.000001f)
+        append (0, startValue, curveAtSample (blockStartSample, points));
+    if (isRampCurve (finalCurve)
+        && (queue.empty()
+            || queue.back().sampleOffset
+                   != static_cast<std::uint32_t> (blockSize - 1))
+        && (queue.empty()
+            || std::abs (queue.back().value - finalValue) > 0.000001f))
+        append (static_cast<std::uint32_t> (blockSize - 1), finalValue,
+                Curve::hold);
+
+    if (! queue.empty())
+        queue.back().curveToNext = Curve::hold;
+    return queue;
+}
+
+inline bool nativeParameterQueueHasRamp (
+    const std::vector<NativeParameterQueuePoint>& queue) noexcept
+{
+    for (std::size_t index = 0; index + 1 < queue.size(); ++index)
+        if (isRampCurve (queue[index].curveToNext)
+            && std::abs (queue[index].value - queue[index + 1].value)
+                   > 0.000001f)
+            return true;
+    return false;
 }
 
 template <typename Visitor>

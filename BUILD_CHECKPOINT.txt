@@ -72,6 +72,10 @@ Manual acceptance:
 - Open More > Copy Realtime Diagnostics after a plug-in automation pass and
   confirm the plug-in runtime section reports `Automation delivery:
   sample-offset sub-block slicing`.
+- Confirm the native VST3 automation parity evidence remains green:
+  `TempoAutomationTests` covers the host-native parameter queue/ramp plan used
+  to map sample-offset automation events into stable sample offsets, clamped
+  values, and ramp metadata for the later VST3 parameter-queue integration.
 
 Honest release boundary:
 

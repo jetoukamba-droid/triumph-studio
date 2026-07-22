@@ -77,6 +77,48 @@ int main()
                  automation::pluginParameterDeliveryName (
                      automation::PluginParameterDelivery::sampleOffsetSubBlocks))
              == "sample-offset sub-block slicing");
+    REQUIRE (std::string (
+                 automation::pluginParameterDeliveryName (
+                     automation::PluginParameterDelivery::
+                         nativeVst3ParameterQueueRamp))
+             == "native VST3 parameter queue/ramp plan");
+
+    const auto nativeQueue = automation::nativeParameterQueueForBlock (
+        1000, 64, plugInAutomation, 0.5f, -1.0f);
+    REQUIRE (nativeQueue.size() == 4);
+    REQUIRE (nativeQueue[0].sampleOffset == 0);
+    REQUIRE (std::abs (nativeQueue[0].value - 0.20f) < 0.0001f);
+    REQUIRE (nativeQueue[0].curveToNext == automation::Curve::hold);
+    REQUIRE (nativeQueue[1].sampleOffset == 8);
+    REQUIRE (nativeQueue[1].value == 1.0f);
+    REQUIRE (nativeQueue[1].curveToNext == automation::Curve::linear);
+    REQUIRE (nativeQueue[2].sampleOffset == 32);
+    REQUIRE (nativeQueue[2].value == 0.0f);
+    REQUIRE (nativeQueue[2].curveToNext == automation::Curve::linear);
+    REQUIRE (nativeQueue[3].sampleOffset == 63);
+    REQUIRE (nativeQueue[3].curveToNext == automation::Curve::hold);
+    REQUIRE (automation::nativeParameterQueueHasRamp (nativeQueue));
+
+    const std::vector<automation::Point> throughBlockRamp {
+        { 0, 0.0f, automation::Curve::smooth },
+        { 100, 1.0f, automation::Curve::linear }
+    };
+    const auto rampQueue = automation::nativeParameterQueueForBlock (
+        40, 20, throughBlockRamp, 0.0f, -1.0f);
+    REQUIRE (rampQueue.size() == 2);
+    REQUIRE (rampQueue[0].sampleOffset == 0);
+    REQUIRE (rampQueue[0].curveToNext == automation::Curve::smooth);
+    REQUIRE (rampQueue[1].sampleOffset == 19);
+    REQUIRE (rampQueue[1].curveToNext == automation::Curve::hold);
+    REQUIRE (automation::nativeParameterQueueHasRamp (rampQueue));
+
+    const auto carriedRampQueue = automation::nativeParameterQueueForBlock (
+        40, 20, throughBlockRamp, 0.0f, rampQueue.front().value);
+    REQUIRE (carriedRampQueue.size() == 2);
+    REQUIRE (carriedRampQueue[0].sampleOffset == 0);
+    REQUIRE (carriedRampQueue[0].curveToNext == automation::Curve::smooth);
+    REQUIRE (carriedRampQueue[1].sampleOffset == 19);
+    REQUIRE (automation::nativeParameterQueueHasRamp (carriedRampQueue));
 
     struct CapturedSlice
     {

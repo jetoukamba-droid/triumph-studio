@@ -219,6 +219,13 @@ and deterministic automation tests, and exposes the delivery mode in `More >
 Copy Realtime Diagnostics`. Native VST3 parameter queues/ramps remain a later
 compatibility gate.
 
+Implementation checkpoint: FR-20 adds a deterministic host-native parameter
+queue/ramp plan for the next VST3 compatibility step. The plan converts
+automation into stable sample offsets, clamped values, and ramp metadata,
+including ramps that cross a block without an automation point inside that
+block. The live engine still uses the FR-18/FR-19 sub-block delivery path until
+third-party VST3 queue/ramp parity is wired and validated.
+
 ### FR-7 - Reliability and product architecture
 
 Backlog: 19 partial-or-missing findings from research ranges 1-15 and 136-150.
