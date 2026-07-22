@@ -1,0 +1,82 @@
+TRIUMPH STUDIO 0.22.0-beta.1 - CLOSED BETA 1 RELEASE CANDIDATE
+
+Release intent:
+
+- Freeze new roadmap features.
+- Validate the first closed beta on the user's Windows reference machine.
+- Package only after all automated and manual acceptance gates pass.
+
+Automated acceptance:
+
+- Clean Windows x64 Release compilation.
+- All 33 CTest targets pass.
+- Release identity and shortcut maps are independently regression tested.
+- tools\LaunchTriumphStudio.ps1 locates the Release app and scanner helper
+  without relying on a hand-typed artefacts path.
+- CPack creates a versioned Windows ZIP and SHA-256 checksum sidecar.
+- ProjectModelTests verifies project format 24 persistent undo restore points,
+  project format 23 clip variants, project format 22 repair records, media asset
+  fingerprints, and the persisted undo manifest.
+
+Manual acceptance:
+
+- Direct device tone and project playback are audible.
+- Import, save/reopen, export, recording, varispeed, and shortcuts work.
+- Right-click an audio clip and verify rename, duplicate, mute, lock, colour,
+  split-at-playhead, reverse, and delete; save/reopen retains its state.
+- On an instrument track, switch between Triumph Piano, Synth, Drums, and
+  Sampler without deleting the track; existing MIDI clips must stay intact.
+- Drag a loop range in the pro timeline ruler and verify playback repeats
+  between the locator handles; double-click the ruler to clear the loop.
+- Confirm the app presents the new charcoal/gold pro-console redesign across
+  the transport, timeline, track rows, clips, and mixer without changing the
+  existing control workflow.
+- Confirm FR-9 structural redesign: left Inspector, center pro timeline,
+  right Browser/Plugins, compact track lanes, visible bottom mixer strips, and
+  Master strip are present at launch and remain usable while editing tracks and
+  clips.
+- Drag the bottom edge of a track row downward and upward; verify the lane grows
+  and shrinks and existing clip move/trim/fade/warp drag gestures still work.
+- A 30-minute edit/playback session produces no freeze or new crash dump.
+- Save/reopen a project and confirm format 24 preserves `assetFingerprint`,
+  persistent `undoManifest` restore points, and repair records for any loader
+  repairs.
+- Capture and restore an audio clip variant; confirm save/reopen retains the
+  variant and Undo/Redo returns between the restored and edited clip states.
+- Save, reopen, and use Undo/Redo on a recent edit; confirm the edit changes
+  after restart rather than only showing a remembered undo label.
+- During a 30-minute edit/playback pass, watch the realtime status and confirm
+  any unhealthy block is attributed as deadline, missing render state, oversized
+  block, read-ahead/source starvation, graph build, parameter queue, or device
+  restart pressure rather than a generic unexplained dropout.
+- Hover the realtime status label and confirm the tooltip shows callback,
+  render-state, buffer, stream/source, parameter queue, graph-build,
+  render-retire backlog, device restart, variable block/rate, plug-in, and
+  hardware-recovery counters.
+- Open More > Copy Realtime Diagnostics, paste the clipboard contents into a
+  text editor, and confirm the report includes project/device context, realtime
+  attribution, plug-in runtime, device recovery, sync state, warning counters,
+  and a Clean or Action required verdict.
+- Launch with tools\LaunchTriumphStudio.ps1, then open VST3 and start a scan or
+  choose a plug-in. Confirm the app repairs/copies the built scanner beside the
+  app when possible, and that any remaining missing-scanner dialog lists the
+  install folder and checked helper paths.
+- Open VST3 > Plug-in Registry after scanning. Confirm the submenu shows
+  validated, blocked, and missing counts; Copy Plug-in Registry Report places a
+  readable registry report on the clipboard; a single registry record can be
+  forgotten without clearing unrelated validated entries.
+- Run an instrument or insert plug-in automation pass and confirm automation
+  changes land smoothly inside the block instead of stepping only once per
+  callback; realtime diagnostics should report parameter queue pressure if the
+  bounded event list is exceeded.
+
+Honest release boundary:
+
+- This is a closed beta engineering preview, not a production release.
+- Trusted in-process third-party effects can still crash or hang the host.
+- Signing, installer/upgrade testing, broad hardware and VST3 matrices,
+  long-session qualification, accessibility certification, and licensing
+  review remain public-production gates.
+
+See BETA_README.txt, RELEASE_NOTES.md, KNOWN_ISSUES.md, and
+docs/Beta1Acceptance.md.

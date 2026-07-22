@@ -1,0 +1,67 @@
+name: Windows Release Gate
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+      - "checkpoint/**"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows-release:
+    name: Build, Test, Package
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        shell: pwsh
+        run: >
+          cmake -S . -B build
+          -G "Visual Studio 17 2022"
+          -A x64
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Release
+        shell: pwsh
+        run: cmake --build build --config Release --parallel
+
+      - name: Verify launcher paths
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File ".\tools\LaunchTriumphStudio.ps1" -NoLaunch
+
+      - name: Run CTest
+        shell: pwsh
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Package
+        shell: pwsh
+        run: cmake --build build --config Release --target package
+
+      - name: Hash package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build\hashes | Out-Null
+          Get-ChildItem build\packages -File | Select-Object FullName, Length, LastWriteTime
+          Get-ChildItem build\packages -File |
+            ForEach-Object {
+              $hash = Get-FileHash $_.FullName -Algorithm SHA256
+              "$($hash.Hash)  $($_.Name)" |
+                Set-Content "build\hashes\$($_.Name).sha256" -Encoding ASCII
+            }
+          Get-ChildItem build\hashes -File | Get-Content
+
+      - name: Upload app artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: triumph-studio-windows-release
+          path: |
+            build/TriumphStudio_artifacts/Release/**
+            build/packages/**
+            build/hashes/**
+          if-no-files-found: error
