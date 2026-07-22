@@ -107,10 +107,14 @@ real-world testing.
   queue/ramp planning evidence. Automation points are translated into stable
   sample offsets, clamped values, and ramp metadata so the later live VST3
   parameter-queue integration has a tested compatibility contract.
+- Post-Beta FR-21 checkpoint: adds a tested FR-1 through FR-4 foundation
+  exit-gate matrix. Realtime streaming, recording/recovery, plug-in isolation,
+  and mixer/monitoring now stay explicitly partial until their hardware,
+  forced-failure, compatibility, and offline parity evidence is present.
 
 ## Automated gate
 
-- A clean Windows x64 Release build must pass all 33 registered tests.
+- A clean Windows x64 Release build must pass all 34 registered tests.
 - Packaging is generated from CMake's install graph and receives a SHA-256
   sidecar checksum.
 

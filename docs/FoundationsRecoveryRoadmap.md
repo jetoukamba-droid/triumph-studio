@@ -226,6 +226,12 @@ including ramps that cross a block without an automation point inside that
 block. The live engine still uses the FR-18/FR-19 sub-block delivery path until
 third-party VST3 queue/ramp parity is wired and validated.
 
+Implementation checkpoint: FR-21 adds an explicit FR-1 through FR-4 foundation
+exit-gate matrix. `FoundationsExitGatesTests` keeps realtime streaming,
+recording/recovery, plug-in isolation, and mixer/monitoring marked partial until
+the named hardware, forced-failure, third-party compatibility, and offline
+parity evidence exists. See `docs/Fr1Fr4ExitGateMatrixCheckpoint.md`.
+
 ### FR-7 - Reliability and product architecture
 
 Backlog: 19 partial-or-missing findings from research ranges 1-15 and 136-150.

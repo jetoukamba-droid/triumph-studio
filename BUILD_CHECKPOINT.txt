@@ -9,7 +9,7 @@ Release intent:
 Automated acceptance:
 
 - Clean Windows x64 Release compilation.
-- All 33 CTest targets pass.
+- All 34 CTest targets pass.
 - Release identity and shortcut maps are independently regression tested.
 - tools\LaunchTriumphStudio.ps1 locates the Release app and scanner helper
   without relying on a hand-typed artefacts path.
@@ -76,6 +76,10 @@ Manual acceptance:
   `TempoAutomationTests` covers the host-native parameter queue/ramp plan used
   to map sample-offset automation events into stable sample offsets, clamped
   values, and ramp metadata for the later VST3 parameter-queue integration.
+- Confirm `FoundationsExitGatesTests` keeps FR-1 realtime streaming, FR-2
+  recording/recovery, FR-3 plug-in isolation, and FR-4 mixer/monitoring marked
+  partial until the named hardware, forced-failure, third-party compatibility,
+  and offline parity evidence is available.
 
 Honest release boundary:
 
